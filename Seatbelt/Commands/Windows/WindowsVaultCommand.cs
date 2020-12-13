@@ -27,7 +27,7 @@ namespace Seatbelt.Commands.Windows
         public override string Command => "WindowsVault";
         public override string Description => "Credentials saved in the Windows Vault (i.e. logins from Internet Explorer and Edge).";
         public override CommandGroup[] Group => new[] { CommandGroup.User };
-        public override bool SupportRemote => false;
+        public override bool SupportRemote => false; // not possible
 
         private readonly Dictionary<Guid, string> VaultSchema = new Dictionary<Guid, string>
         {
@@ -53,6 +53,10 @@ namespace Seatbelt.Commands.Windows
             var vaultCount = 0;
             var vaultGuidPtr = IntPtr.Zero;
             var result = VaultEnumerateVaults(0, ref vaultCount, ref vaultGuidPtr);
+
+            var vaultItemType = Environment.OSVersion.Version > new Version("6.2") ?
+                typeof(VAULT_ITEM_WIN8) :
+                typeof(VAULT_ITEM_WIN7);
 
             if (result != 0)
             {
@@ -108,7 +112,7 @@ namespace Seatbelt.Commands.Windows
 
                         entries.Add(entry);
 
-                        currentVaultItem = (IntPtr)(currentVaultItem.ToInt64() + Marshal.SizeOf(currentVaultItem));
+                        currentVaultItem = (IntPtr)(currentVaultItem.ToInt64() + Marshal.SizeOf(vaultItemType));
                     }
                 }
 
@@ -283,7 +287,10 @@ namespace Seatbelt.Commands.Windows
                 case VAULT_ELEMENT_TYPE.ByteArray:
                     var o = (VAULT_BYTE_ARRAY)Marshal.PtrToStructure(elementPtr, typeof(VAULT_BYTE_ARRAY));
                     var array = new byte[o.Length];
-                    Marshal.Copy(o.pData, array, 0, o.Length);
+                    if (o.Length > 0)
+                    {
+                        Marshal.Copy(o.pData, array, 0, o.Length);
+                    }
                     value = array;
                     break;
 

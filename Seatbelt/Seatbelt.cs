@@ -7,13 +7,13 @@ using System.Text;
 
 namespace Seatbelt
 {
-    public class Seatbelt
+    public class Seatbelt : IDisposable
     {
         public bool FilterResults { get; }
 
         private readonly IOutputSink _outputSink;
         private readonly Runtime _runtime;
-        private const string Version = "1.0.0";
+        private const string Version = "1.1.1";
         private SeatbeltOptions Options { get; set; }
 
         public Seatbelt(string[] args)
@@ -160,6 +160,11 @@ namespace Seatbelt
             _outputSink.WriteHost("    'Seatbelt.exe -group=system -outputfile=\"C:\\Temp\\out.txt\"' will run system checks and output to a .txt file.");
             _outputSink.WriteHost("    'Seatbelt.exe -group=user -q -outputfile=\"C:\\Temp\\out.json\"' will run in quiet mode with user checks and output to a .json file.");
 
+        }
+
+        public void Dispose()
+        {
+            _outputSink.Dispose();
         }
     }
 }

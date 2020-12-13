@@ -4,7 +4,7 @@ using Seatbelt.Output.TextWriters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Management;
 
 namespace Seatbelt.Commands.Windows
 {
@@ -25,7 +25,7 @@ namespace Seatbelt.Commands.Windows
         {
             var versions = new List<string>();
 
-            var dirs = System.IO.Directory.GetDirectories($"{Environment.GetEnvironmentVariable("windir")}\\Microsoft.Net\\Framework\\");
+            var dirs = ThisRunTime.GetDirectories("\\Windows\\Microsoft.Net\\Framework\\");
             foreach (var dir in dirs)
             {
                 if (System.IO.File.Exists($"{dir}\\System.dll"))
@@ -38,6 +38,21 @@ namespace Seatbelt.Commands.Windows
             return versions;
         }
 
+        public string GetOSVersion()
+        {
+            var wmiData = ThisRunTime.GetManagementObjectSearcher(@"root\cimv2", "SELECT Version FROM Win32_OperatingSystem");
+            
+            try
+            {
+                foreach (var os in wmiData.Get())
+                {
+                    return os["Version"].ToString();
+                }
+            }
+            catch { }
+
+            return "";
+        }
 
         public override IEnumerable<CommandDTOBase?> Execute(string[] args)
         {
@@ -58,11 +73,12 @@ namespace Seatbelt.Commands.Windows
                 installedDotNetVersions.Add(dotNet4Version);
             }
 
+            int osVersionMajor = int.Parse(GetOSVersion().Split('.')[0]);
 #nullable restore
             yield return new DotNetDTO(
                 installedCLRVersions.ToArray(),
                 installedDotNetVersions.ToArray(),
-                Environment.OSVersion.Version.Major >= 10
+                osVersionMajor >= 10
                 );
         }
     }

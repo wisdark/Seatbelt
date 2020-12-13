@@ -26,7 +26,7 @@ namespace Seatbelt.Commands.Windows
         public override string Command => "OfficeMRUs";
         public override string Description => "Office most recently used file list (last 7 days)";
         public override CommandGroup[] Group => new[] { CommandGroup.User };
-        public override bool SupportRemote => false; // could, but won't for now
+        public override bool SupportRemote => false; // TODO but a bit more complicated
 
         public OfficeMRUsCommand(Runtime runtime) : base(runtime)
         {
@@ -75,10 +75,10 @@ namespace Seatbelt.Commands.Windows
                 {
                     userName = sid;
                 }
-
-                var officeVersion =
+                
+                var officeVersion = 
                     RegistryUtil.GetSubkeyNames(RegistryHive.Users, $"{sid}\\Software\\Microsoft\\Office")
-                    ?.Where(k => float.TryParse(k, out _));
+                    ?.Where(k => float.TryParse(k, NumberStyles.AllowDecimalPoint, new CultureInfo("en-GB"), out _));
 
                 if (officeVersion is null)
                     continue;
